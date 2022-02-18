@@ -3,13 +3,13 @@ resources:
   type: git
   icon: github
   source:
-    uri: "https://github.com/HuseyinUtkuASLAN/dummy_net_api.git"
-    branch: "master"
+    uri: "https://github.com/HuseyinUtkuASLAN/dummy-net-api.git"
+    branch: "main"
 
 - name: docker-demo
   type: docker-image
   source:
-    repository: huseyinutkuaslan/dummy_flask
+    repository: huseyinutkuaslan/dummy-net-api
     username: ((docker-hub-user-name))
     password: ((docker-hub-password))
 
@@ -22,56 +22,45 @@ jobs:
   - get: app-repo
     trigger: true
   
+  - task: test
+    config:
+      inputs:
+      - name : app-repo
+      platform : linux
+      image_resource:
+        type: registry-image
+        source: { repository: mcr.microsoft.com/dotnet/sdk }
+      run:
+        path: sh
+        args: 
+          - -exc
+          - |
+            cd app-repo/src/dummy-api
+            dotnet restore
+            dotnet build
+            dotnet test
+  
+  - task: publish
+    config:
+      inputs: 
+      - name: app-repo
+      outputs:
+      - name: published-files
+      platform : linux
+      image_resource:
+        type: registry-image
+        source: { repository: mcr.microsoft.com/dotnet/sdk }
+      run:
+        path: sh
+        args: 
+          - -exc
+          - |
+            dotnet publish -c Release app-repo/src/dummy-api
+            cp app-repo/src/dummy-api/dummy-api/bin/Release/netcoreapp3.1/publish/* published-files/
+            cp app-repo/ci/runtime-image/Dockerfile published-files/
   - put: docker-demo
     params:
       build: published-files
-
-  - task: test
-    
-    config:
-
-    - inputs:
-      - name : app-repo
-
-    platform : linux
-    image_resource:
-      type: registry-image
-      source: { repository: mcr.microsoft.com/dotnet/sdk }
-
-    run:
-      path: sh
-      args: 
-        - -exc
-        - |
-          cd app-repo/src/dummy-api
-          dotnet restore
-          dotnet build
-          cp dummy-api/bin
-          dotnet test
-  
-  - task: publish
-
-    passed: test
-
-    config:
-    - inputs: 
-      - name: app-repo
-    - outputs:
-      - name: published-files
-    platform : linux
-    image_resource:
-      type: registry-image
-      source: { repository: mcr.microsoft.com/dotnet/sdk }
-
-    run:
-      path: sh
-      args: 
-        - -exc
-        - |
-          dotnet publish -c Release app-repo/src/dummy-api
-          cp app-repo/src/dummy-api/dummy-api/bin/Release/netcoreapp3.1/publish/* published-files/
-          cp app-repo/ci/runtime-image/Dockerfile published-files/
-
-# - name: auto-testing
-# - name: manuel-acceptance
-# - name: deploy
+# # - name: auto-testing
+# # - name: manuel-acceptance
+# # - name: deploy
