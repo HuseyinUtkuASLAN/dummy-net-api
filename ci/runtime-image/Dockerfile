@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime
+FROM mcr.microsoft.com/dotnet/aspnet
 
 COPY * /home/
 
