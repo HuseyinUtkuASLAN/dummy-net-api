@@ -4,4 +4,4 @@ COPY * /home/
 
 EXPOSE 5000:5000
 
-CMD [ "/home/dummy-api.exe" ]
+# CMD [ "/home/dummy-api" ]
