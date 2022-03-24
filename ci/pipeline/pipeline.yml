@@ -15,13 +15,22 @@ resources:
 
 jobs:
 
+- name: set-self
+  public: true
+  plan:
+  - get: app-repo
+    trigger: true
+  - set_pipeline: self
+    file: app-repo/ci/pipeline/pipeline.yml
+
 - name: build-test-and-publish-to-hub
   public: true
 
   plan:
   - get: app-repo
     trigger: true
-  
+    passed: [set-self]
+
   - task: build
     config:
       inputs:
